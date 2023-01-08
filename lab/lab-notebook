@@ -1,0 +1,18 @@
+Garren @ jan-7th, 2022
+
+- I'm setting out to
+[X] 1) draft the overall structure for the repository
+[X] 2) draft the build setup
+[X] 3) compile the test case generator
+[X] 6) evaluate the suitability of the graph implementation created for the dijkstra's assignment (maybe the Heap Node relationhip is not relevant, but we'll see)
+        i) some consideration was needed in order to first: remember what the residual arcs were about and second: the file is going to be received through the standard input.
+        ii) so in order to read the file only once and do not incur into extra memory usage (needed in order to perform the compression of the edges into a single contiguous array) I decided to add vectors in the graph, they are going to store the outgoing arcs and residual counterparts of incoming arcs. This way every time an arc u-v is added to u, the residual arc (v-u) is respectively added to the residual collection at v. This way the algorithm is expected to be implemented more identically to what was saw in class.
+        iii) now vertices have excess and routines to add new arcs and the graph, other than that vertices don't have any information about their own identity, in the current case, this information is inherent to the structure
+        iv) further understanding of the algorithm seems to be necessary (choosing the highest active node)
+    10) draft the push-relabel algorithm implementation
+        i) one issue here is that maybe we are going to need to reintroduce the heap sorting the active nodes by height
+    4) draft the parameters for the test cases
+    5) understand why the algorithm ensures a max-flow (why the non-existence of an s-t path with room for improvement implies the flow is maximum? did I get it right? Possibly not in accord to what we saw with the draft that ended up in Ford-Fulkerson's algorithm)
+    7) start a draft for the paper using the template applied to the last submission
+    8) ask Ritt about a suitable way of empirically testing if the implementation respects the theoretical complexity upper bounds visited in class
+    9) update the lab notebook
