@@ -19,10 +19,9 @@ int main() {
 
     std::cin >> dummy >> s >> dummy;
     std::cin >> dummy >> t >> dummy;
-    std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
     local::DIMACS_residual_graph g(nodes_count, arcs_count, std::cin);
-    std::cout << "elapsed time: "
-              << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - start).count()
-              << " us\n";
+    auto a = g.queryMaxFlow(s, t);
+    std::cout << "max flow from " << s << " to " << t << " is " << std::get<0>(a) << " found in "
+              << std::get<1>(a).count() << " nanoseconds" << std::endl;
     return 0;
 }
