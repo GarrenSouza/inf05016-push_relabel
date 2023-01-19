@@ -50,7 +50,7 @@ std::tuple<uint32_t, std::chrono::nanoseconds>
 local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
     assert(s > 0 && t > 0);
     // preserve the graph state by working out the max-flow over a copy
-    DIMACS_residual_graph graph = *this;
+    DIMACS_residual_graph &graph = *this;
     s = index_to_array_pos(s);
     t = index_to_array_pos(t);
 
@@ -58,28 +58,18 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
 
     local::nd_bucket_array<vertex> bucket_list(2 * graph.nodes_count - 1, [](vertex &v) { return v.key; });
 
-    // initializing the algorithm state
-    local::kHeap<vertex> heap(4,
-                              [](const HeapNode &r, const HeapNode &c) -> bool {
-                                  return r.key < c.key;
-                              });
-
     graph.nodes[s].key = graph.nodes_count;
     for (int i = 0; i < graph.nodes[s]._out_edges.size(); ++i) {
         edge_to &e = graph.nodes[s]._out_edges[i];
         graph.nodes[e._destination]._out_edges[e._residual_counterpart_index]._capacity_available = e._capacity_available;
         graph.nodes[e._destination].excess = e._capacity_available;
         e._capacity_available = 0;
-        if (e._destination != t) {
-//            heap.insert(&graph.nodes[e._destination]);
+        if (e._destination != t)
             bucket_list.push(&graph.nodes[e._destination]);
-        }
     }
-    int32_t edgeToPushIndex, iterations = 0, pops = 0, pushes = 0, relabels = 0;
+    int32_t edgeToPushIndex;
 
-    // the actual algorithm
     while (!bucket_list.is_empty()) {
-//        vertex &v = *heap.get_root();
         vertex &v = *bucket_list.pop_from_highest_bucket();
 
         edgeToPushIndex = graph.findEdgeToPush(v);
@@ -88,10 +78,8 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
             edge_to &e = v._out_edges[edgeToPushIndex];
             if (e._destination != s
                 && e._destination != t
-                && !graph.nodes[e._destination].isActive()) {
-//                heap.insert(&graph.nodes[e._destination]);
+                && !graph.nodes[e._destination].isActive())
                 bucket_list.push(&graph.nodes[e._destination]);
-            }
             graph.push(v, edgeToPushIndex);
             if (v.isActive())
                 bucket_list.push(&v);
