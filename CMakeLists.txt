@@ -4,6 +4,8 @@ project(push-relabel)
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
+set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
+
 # push-relabel
 set(${PROJECT_NAME}_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/src/graph.cpp"

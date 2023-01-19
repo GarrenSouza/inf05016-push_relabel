@@ -7,15 +7,16 @@
 
 using namespace std::chrono;
 
-local::DIMACS_residual_graph::DIMACS_residual_graph(int32_t n, int32_t e, std::istream &in) : nodes_count(n),
-                                                                                              arcs_count(e) {
+local::DIMACS_residual_graph::DIMACS_residual_graph(int32_t n, int32_t e, std::istream &in) : arcs_count(e),
+                                                                                              nodes_count(n) {
     std::string line, dummy;
     std::stringstream linestr;
 
     nodes.resize(nodes_count);
 
     char _;
-    uint32_t u, v, w, i = 0;
+    uint32_t u, v, w;
+    int32_t i = 0;
 
     while (i < arcs_count) {
         std::getline(in, line);
@@ -61,7 +62,7 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
                               });
 
     graph.nodes[s].key = graph.nodes_count;
-    for (int i = 0; i < graph.nodes[s]._out_edges.size(); ++i) {
+    for (size_t i = 0; i < graph.nodes[s]._out_edges.size(); ++i) {
         edge_to &e = graph.nodes[s]._out_edges[i];
         graph.nodes[e._destination]._out_edges[e._residual_counterpart_index]._capacity_available = e._capacity_available;
         graph.nodes[e._destination].excess = e._capacity_available;
@@ -74,18 +75,17 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
     while (!heap.is_empty()) {
         vertex &v = *heap.get_root();
 
-        edgeToPushIndex = graph.findEdgeToPush(v);
-
-        if (edgeToPushIndex >= 0) {
+        while (v.isActive() && (edgeToPushIndex = graph.findEdgeToPush(v)) >= 0) {
             edge_to &e = v._out_edges[edgeToPushIndex];
             if (e._destination != s
                 && e._destination != t
                 && !graph.nodes[e._destination].isActive())
                 heap.insert(&graph.nodes[e._destination]);
             graph.push(v, edgeToPushIndex);
-            if (!v.isActive())
-                heap.pop_root();
-        } else
+        }
+        if (!v.isActive())
+            heap.pop_root();
+        else
             graph.relabel(v);
     }
 
@@ -107,14 +107,13 @@ void local::DIMACS_residual_graph::push(vertex &v, uint32_t index) {
 
 void local::DIMACS_residual_graph::relabel(vertex &v) {
     v.key += 1;
-    v.next_potential_arc_to_push = 0;
 }
 
 int32_t local::DIMACS_residual_graph::findEdgeToPush(local::vertex &v) {
-    for (int i = v.next_potential_arc_to_push; i < v._out_edges.size(); i++)
+    for (int32_t i = v.next_potential_arc_to_push; i < int32_t(v._out_edges.size()); i++)
         if (v.key == nodes[v._out_edges[i]._destination].key + 1 && v._out_edges[i]._capacity_available > 0)
             return i;
         else
-            v.next_potential_arc_to_push++;
+            v.next_potential_arc_to_push = (v.next_potential_arc_to_push + 1) % int32_t(v._out_edges.size());
     return -1;
 }

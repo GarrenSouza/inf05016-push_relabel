@@ -23,7 +23,7 @@ struct EdgeInformation {
  
 typedef adjacency_list<vecS,vecS,directedS,VertexInformation,EdgeInformation> DiGraph;
  
-int main(int argc, char *argv[]) {
+int main() {
   // (0) read graph
  
   DiGraph g;

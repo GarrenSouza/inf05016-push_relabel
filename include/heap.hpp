@@ -29,8 +29,8 @@ namespace local {
     class kHeap {
         std::vector<HeapNode *> _references;
         uint32_t _next_available_slot;
-        uint32_t _k;
-        uint32_t _size, _capacity;
+        int32_t _k;
+        int32_t _size, _capacity;
 
         uint64_t _interchanges;
         uint64_t _insertions;
