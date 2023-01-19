@@ -5,6 +5,8 @@
 #include <graph.hpp>
 #include <cassert>
 
+#include <non-dec-bucket-array.hpp>
+
 using namespace std::chrono;
 
 local::DIMACS_residual_graph::DIMACS_residual_graph(int32_t n, int32_t e, std::istream &in) : nodes_count(n),
@@ -54,6 +56,8 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
 
     time_point<system_clock> start = system_clock::now();
 
+    local::nd_bucket_array<vertex> bucket_list(2 * graph.nodes_count - 1, [](vertex &v) { return v.key; });
+
     // initializing the algorithm state
     local::kHeap<vertex> heap(4,
                               [](const HeapNode &r, const HeapNode &c) -> bool {
@@ -66,13 +70,17 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
         graph.nodes[e._destination]._out_edges[e._residual_counterpart_index]._capacity_available = e._capacity_available;
         graph.nodes[e._destination].excess = e._capacity_available;
         e._capacity_available = 0;
-        if (e._destination != t) heap.insert(&graph.nodes[e._destination]);
+        if (e._destination != t) {
+//            heap.insert(&graph.nodes[e._destination]);
+            bucket_list.push(&graph.nodes[e._destination]);
+        }
     }
-    int32_t edgeToPushIndex;
+    int32_t edgeToPushIndex, iterations = 0, pops = 0, pushes = 0, relabels = 0;
 
     // the actual algorithm
-    while (!heap.is_empty()) {
-        vertex &v = *heap.get_root();
+    while (!bucket_list.is_empty()) {
+//        vertex &v = *heap.get_root();
+        vertex &v = *bucket_list.pop_from_highest_bucket();
 
         edgeToPushIndex = graph.findEdgeToPush(v);
 
@@ -80,13 +88,17 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
             edge_to &e = v._out_edges[edgeToPushIndex];
             if (e._destination != s
                 && e._destination != t
-                && !graph.nodes[e._destination].isActive())
-                heap.insert(&graph.nodes[e._destination]);
+                && !graph.nodes[e._destination].isActive()) {
+//                heap.insert(&graph.nodes[e._destination]);
+                bucket_list.push(&graph.nodes[e._destination]);
+            }
             graph.push(v, edgeToPushIndex);
-            if (!v.isActive())
-                heap.pop_root();
-        } else
+            if (v.isActive())
+                bucket_list.push(&v);
+        } else {
             graph.relabel(v);
+            bucket_list.push(&v);
+        }
     }
 
     time_point<system_clock> end = system_clock::now();
