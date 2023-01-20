@@ -12,7 +12,7 @@ namespace local {
      * Heap node model used in the current MinKHeap, every type T that uses the heap must inherit from HeapNode
      */
     struct HeapNode {
-        uint32_t key;
+        int32_t key;
         uint32_t position;
 
         HeapNode() : key(0), position(0) {}

@@ -46,7 +46,7 @@ namespace local {
 
         DIMACS_residual_graph(int32_t nodes, int32_t edges, std::istream &input_stream);
 
-        std::tuple<uint32_t, std::chrono::nanoseconds> queryMaxFlow(uint32_t s, uint32_t t);
+        std::tuple<uint32_t, std::chrono::nanoseconds> queryMaxFlow(int32_t s, int32_t t);
 
     private:
         static inline uint32_t index_to_array_pos(uint32_t position);
@@ -55,8 +55,11 @@ namespace local {
 
         void relabel(vertex &v);
 
+        vertex *get_highest_vertex(int32_t s, int32_t t);
+
         int32_t findEdgeToPush(vertex &v);
 
+        int32_t highest_node_index;
         std::vector<vertex> nodes;
     };
 }
