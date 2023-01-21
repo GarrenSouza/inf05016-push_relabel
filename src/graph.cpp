@@ -59,7 +59,7 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
 
     time_point<system_clock> start = system_clock::now();
 
-    local::nd_bucket_array<vertex> HL(2 * graph.nodes_count - 1, [](vertex &v) { return v.key; });
+    local::nd_bucket_array<vertex> HL(graph.nodes_count, [](vertex &v) { return v.key; });
 
     // initializing the algorithm
     graph.nodes[s].key = graph.nodes_count;
@@ -82,7 +82,8 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
             if ((e = graph.findEdgeToPush(*v))) {
                 if (e->_destination != s
                     && e->_destination != t
-                    && !nodes[e->_destination].isActive())
+                    && !nodes[e->_destination].isActive()
+                    && nodes[e->_destination].key < nodes_count)
                     HL.push(&nodes[e->_destination]);
                 graph.push(*v, *e);
             } else
