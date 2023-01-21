@@ -31,7 +31,7 @@ namespace local {
     struct vertex : public HeapNode {
         std::vector<edge_to> _out_edges;
         uint32_t excess;
-        int32_t next_potential_arc_to_push;
+        size_t next_potential_arc_to_push;
 
         vertex() : excess(0), next_potential_arc_to_push(0) {}
 
@@ -46,18 +46,16 @@ namespace local {
 
         DIMACS_residual_graph(int32_t nodes, int32_t edges, std::istream &input_stream);
 
-        std::tuple<uint32_t, std::chrono::nanoseconds> queryMaxFlow(int32_t s, int32_t t);
+        std::tuple<uint32_t, std::chrono::nanoseconds> queryMaxFlow(uint32_t s, uint32_t t);
 
     private:
         static inline uint32_t index_to_array_pos(uint32_t position);
 
-        void push(vertex &v, uint32_t index);
+        void push(vertex &v, edge_to &e);
 
         void relabel(vertex &v);
 
-        vertex *get_highest_vertex(int32_t s, int32_t t);
-
-        int32_t findEdgeToPush(vertex &v);
+        edge_to* findEdgeToPush(vertex &v);
 
         int32_t highest_node_index;
         std::vector<vertex> nodes;

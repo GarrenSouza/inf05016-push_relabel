@@ -1,9 +1,12 @@
 
 #include <string>
 #include <sstream>
+#include <algorithm>
 
 #include <graph.hpp>
 #include <cassert>
+
+#include <non-dec-bucket-array-2.hpp>
 
 using namespace std::chrono;
 
@@ -47,41 +50,52 @@ bool local::vertex::isActive() {
 }
 
 std::tuple<uint32_t, std::chrono::nanoseconds>
-local::DIMACS_residual_graph::queryMaxFlow(int32_t s, int32_t t) {
+local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
     assert(s > 0 && t > 0);
-    // preserve the graph state by working out the max-flow over a copy
+    // it is possible to preserve the graph state by working out the max-flow over a copy
     DIMACS_residual_graph &graph = *this;
     s = index_to_array_pos(s);
     t = index_to_array_pos(t);
 
     time_point<system_clock> start = system_clock::now();
 
-    // initializing the algorithm state
+    local::nd_bucket_array<vertex> HL(2 * graph.nodes_count - 1, [](vertex &v) { return v.key; });
+
+    // initializing the algorithm
     graph.nodes[s].key = graph.nodes_count;
     for (size_t i = 0; i < graph.nodes[s]._out_edges.size(); ++i) {
         edge_to &e = graph.nodes[s]._out_edges[i];
         graph.nodes[e._destination]._out_edges[e._residual_counterpart_index]._capacity_available = e._capacity_available;
         graph.nodes[e._destination].excess = e._capacity_available;
         e._capacity_available = 0;
+        if (e._destination != t)
+            HL.push(&nodes[e._destination]);
     }
-    int32_t edgeToPushIndex;
+
+    edge_to *e;
     vertex *v;
 
     // the actual algorithm
-    while ((v = graph.get_highest_vertex(s, t)))
+    while (!HL.is_empty()) {
+        v = HL.pop_from_highest_bucket();
         while (v->isActive())
-            if ((edgeToPushIndex = graph.findEdgeToPush(*v)) >= 0)
-                graph.push(*v, edgeToPushIndex);
-            else
+            if ((e = graph.findEdgeToPush(*v))) {
+                if (e->_destination != s
+                    && e->_destination != t
+                    && !nodes[e->_destination].isActive())
+                    HL.push(&nodes[e->_destination]);
+                graph.push(*v, *e);
+            } else
                 graph.relabel(*v);
+
+    }
 
     time_point<system_clock> end = system_clock::now();
 
     return {graph.nodes[t].excess, duration_cast<nanoseconds>(end - start)};
 }
 
-void local::DIMACS_residual_graph::push(vertex &v, uint32_t index) {
-    edge_to &e = v._out_edges[index];
+void local::DIMACS_residual_graph::push(vertex &v, edge_to &e) {
     uint32_t delta = std::min(e._capacity_available, v.excess);
 
     e._capacity_available -= delta;
@@ -95,26 +109,10 @@ void local::DIMACS_residual_graph::relabel(vertex &v) {
     v.key += 1;
 }
 
-int32_t local::DIMACS_residual_graph::findEdgeToPush(local::vertex &v) {
-    for (int32_t i = v.next_potential_arc_to_push; i < int32_t(v._out_edges.size()); i++)
+local::edge_to *local::DIMACS_residual_graph::findEdgeToPush(local::vertex &v) {
+    for (size_t &i = v.next_potential_arc_to_push; i < v._out_edges.size(); i++)
         if (v.key == nodes[v._out_edges[i]._destination].key + 1 && v._out_edges[i]._capacity_available > 0)
-            return i;
-        else
-            v.next_potential_arc_to_push = (v.next_potential_arc_to_push + 1) % int32_t(v._out_edges.size());
-    return -1;
-}
-
-local::vertex *local::DIMACS_residual_graph::get_highest_vertex(int32_t s, int32_t t) {
-    vertex *ptr = nullptr;
-    int32_t max_height = -1;
-    int32_t i;
-    for (i = highest_node_index + 1; i < nodes_count; ++i) {
-        vertex &v = nodes[i];
-        if (i != s && i != t && v.isActive() && v.key > max_height) {
-            ptr = &nodes[i];
-            max_height = v.key;
-        }
-    }
-    highest_node_index = i % nodes_count;
-    return ptr;
+            return &v._out_edges[i];
+    v.next_potential_arc_to_push = 0;
+    return nullptr;
 }

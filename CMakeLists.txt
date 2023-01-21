@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(push-relabel)
 
-set(CMAKE_VERBOSE_MAKEFILE OFF)
+set(CMAKE_VERBOSE_MAKEFILE ON )
 
 set (CMAKE_CXX_FLAGS "-Wall -Wextra -Wpedantic -Werror")
 
@@ -13,7 +13,7 @@ set(${PROJECT_NAME}_SOURCES
         )
 add_executable(push-relabel ${${PROJECT_NAME}_SOURCES})
 target_include_directories(push-relabel PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set_property(TARGET push-relabel PROPERTY CXX_STANDARD 11)
+set_property(TARGET push-relabel PROPERTY CXX_STANDARD 17)
 
 # test-case-generator
 set(test_cases

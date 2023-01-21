@@ -87,7 +87,7 @@ namespace local {
          * Returns a pointer to the minimum value in the underlying data in O(1)
          * @return Pointer to the minimum value in the heap
          */
-        [[nodiscard]] T *get_root();
+        T *get_root();
 
         /**
          * Pops AND Returns a pointer to the minimum value in the underlying data, making sure the heap invariant applies.
@@ -300,7 +300,7 @@ namespace local {
     }
 
     template<typename T>
-    [[nodiscard]] T *kHeap<T>::get_root() {
+    T *kHeap<T>::get_root() {
         if (_size > 0) return static_cast<T *>(_references[0]);
         else throw std::runtime_error("@MinKHeap::get_root | Heap is empty");
     }
