@@ -11,8 +11,7 @@
 using namespace std::chrono;
 
 local::DIMACS_residual_graph::DIMACS_residual_graph(int32_t n, int32_t e, std::istream &in) : arcs_count(e),
-                                                                                              nodes_count(n),
-                                                                                              highest_node_index(-1) {
+                                                                                              nodes_count(n){
     std::string line, dummy;
     std::stringstream linestr;
 

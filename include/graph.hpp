@@ -57,7 +57,6 @@ namespace local {
 
         edge_to* findEdgeToPush(vertex &v);
 
-        int32_t highest_node_index;
         std::vector<vertex> nodes;
     };
 }
