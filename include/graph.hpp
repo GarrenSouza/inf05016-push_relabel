@@ -46,7 +46,7 @@ namespace local {
 
         DIMACS_residual_graph(int32_t nodes, int32_t edges, std::istream &input_stream);
 
-        std::tuple<uint32_t, std::chrono::nanoseconds> queryMaxFlow(uint32_t s, uint32_t t);
+        uint32_t queryMaxFlow(uint32_t s, uint32_t t);
 
     private:
         static inline uint32_t index_to_array_pos(uint32_t position);

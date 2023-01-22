@@ -71,7 +71,6 @@ namespace local {
     template<typename T>
     void nd_bucket_array<T>::push(T *new_element) {
         int32_t selected_bucket = _bucket_mapper(*new_element);
-        assert(static_cast<size_t>(selected_bucket) < buckets.size());
         buckets[selected_bucket].push(new_element);
         if (selected_bucket > _biggest_index)
             _biggest_index = selected_bucket;
