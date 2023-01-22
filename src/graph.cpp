@@ -67,7 +67,7 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
         graph.nodes[e._destination].excess = e._capacity_available;
         e._capacity_available = 0;
         if (e._destination != t)
-            HL.push(&nodes[e._destination]);
+            HL.push(&graph.nodes[e._destination]);
     }
 
     edge_to *e;
@@ -80,9 +80,9 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
             if ((e = graph.findEdgeToPush(*v))) {
                 if (e->_destination != s
                     && e->_destination != t
-                    && !nodes[e->_destination].isActive()
-                    && nodes[e->_destination].key < nodes_count)
-                    HL.push(&nodes[e->_destination]);
+                    && !graph.nodes[e->_destination].isActive()
+                    && graph.nodes[e->_destination].key < nodes_count)
+                    HL.push(&graph.nodes[e->_destination]);
                 graph.push(*v, *e);
             } else
                 graph.relabel(*v);
