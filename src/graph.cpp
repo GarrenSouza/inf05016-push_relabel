@@ -4,14 +4,13 @@
 #include <algorithm>
 
 #include <graph.hpp>
-#include <cassert>
 
 #include <non-dec-bucket-array-2.hpp>
 
 using namespace std::chrono;
 
 local::DIMACS_residual_graph::DIMACS_residual_graph(int32_t n, int32_t e, std::istream &in) : arcs_count(e),
-                                                                                              nodes_count(n){
+                                                                                              nodes_count(n) {
     std::string line, dummy;
 
     nodes.resize(nodes_count);
@@ -47,13 +46,12 @@ bool local::vertex::isActive() {
     return excess > 0;
 }
 
-std::tuple<uint32_t, std::chrono::nanoseconds>
+std::string
 local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
-    assert(s > 0 && t > 0);
     // it is possible to preserve the graph state by working out the max-flow over a copy
-    DIMACS_residual_graph &graph = *this;
-    s = index_to_array_pos(s);
-    t = index_to_array_pos(t);
+    DIMACS_residual_graph graph = *this;
+
+    uint64_t pushes = 0, relabels = 0;
 
     time_point<system_clock> start = system_clock::now();
 
@@ -67,7 +65,7 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
         graph.nodes[e._destination].excess = e._capacity_available;
         e._capacity_available = 0;
         if (e._destination != t)
-            HL.push(&nodes[e._destination]);
+            HL.push(&graph.nodes[e._destination]);
     }
 
     edge_to *e;
@@ -80,18 +78,30 @@ local::DIMACS_residual_graph::queryMaxFlow(uint32_t s, uint32_t t) {
             if ((e = graph.findEdgeToPush(*v))) {
                 if (e->_destination != s
                     && e->_destination != t
-                    && !nodes[e->_destination].isActive()
-                    && nodes[e->_destination].key < nodes_count)
-                    HL.push(&nodes[e->_destination]);
+                    && !graph.nodes[e->_destination].isActive()
+                    && graph.nodes[e->_destination].key < nodes_count)
+                    HL.push(&graph.nodes[e->_destination]);
                 graph.push(*v, *e);
-            } else
+                ++pushes;
+            } else {
                 graph.relabel(*v);
-
+                ++relabels;
+            }
     }
 
     time_point<system_clock> end = system_clock::now();
 
-    return {graph.nodes[t].excess, duration_cast<nanoseconds>(end - start)};
+    std::stringstream ss;
+
+    ss << s << ";";
+    ss << t << ";";
+    ss << graph.nodes[t].excess << ";";
+    ss << duration_cast<nanoseconds>(end - start).count() << ";";
+    ss << pushes << ";";
+    ss << relabels << ";";
+    ss << HL.get_report();
+
+    return ss.str();
 }
 
 void local::DIMACS_residual_graph::push(vertex &v, edge_to &e) {
@@ -114,4 +124,13 @@ local::edge_to *local::DIMACS_residual_graph::findEdgeToPush(local::vertex &v) {
             return &v._out_edges[i];
     v.next_potential_arc_to_push = 0;
     return nullptr;
+}
+
+std::string local::DIMACS_residual_graph::getQueryMaxFlowReportHeader() {
+    std::stringstream ss;
+
+    ss << "max-flow_s;max-flow_t;max-flow_value;max-flow_elapsed_time(ns);max-flow_pushes;max-flow_relabels;";
+    ss << local::nd_bucket_array<vertex>::get_report_header();
+
+    return ss.str();
 }

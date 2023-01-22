@@ -20,7 +20,18 @@ int main() {
     std::cin >> dummy >> s >> dummy;
     std::cin >> dummy >> t >> dummy;
     local::DIMACS_residual_graph g(nodes_count, arcs_count, std::cin);
-    auto a = g.queryMaxFlow(s, t);
-    std::cout << std::get<0>(a);
+
+    srand48(4567);
+
+    std::cout << "m;n;" << local::DIMACS_residual_graph::getQueryMaxFlowReportHeader() << "\n";
+
+    for (int i = 0; i < 11; ++i) {
+        s = lrand48() % nodes_count;
+        while ((t = lrand48() % nodes_count) == s);
+        for (int j = 0; j < 5; ++j) {
+            std::cout << arcs_count << ";" << nodes_count << ";" << g.queryMaxFlow(s, t) << "\n";
+        }
+    }
+
     return 0;
 }
