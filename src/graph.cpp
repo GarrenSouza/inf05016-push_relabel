@@ -46,13 +46,13 @@ bool local::vertex::isActive() {
     return excess > 0;
 }
 
-std::tuple<uint32_t, std::chrono::nanoseconds>
+std::string
 local::DIMACS_residual_graph::queryMaxFlow(int32_t s, int32_t t) {
-    assert(s > 0 && t > 0);
     // preserve the graph state by working out the max-flow over a copy
-    DIMACS_residual_graph &graph = *this;
-    s = index_to_array_pos(s);
-    t = index_to_array_pos(t);
+    search_iterations = 0;
+    DIMACS_residual_graph graph = *this;
+
+    uint64_t pushes = 0, relabels = 0;
 
     time_point<system_clock> start = system_clock::now();
 
@@ -70,14 +70,27 @@ local::DIMACS_residual_graph::queryMaxFlow(int32_t s, int32_t t) {
     // the actual algorithm
     while ((v = graph.get_highest_vertex(s, t)))
         while (v->isActive())
-            if ((edgeToPushIndex = graph.findEdgeToPush(*v)) >= 0)
+            if ((edgeToPushIndex = graph.findEdgeToPush(*v)) >= 0) {
                 graph.push(*v, edgeToPushIndex);
-            else
+                ++pushes;
+            } else {
                 graph.relabel(*v);
+                ++relabels;
+            }
 
     time_point<system_clock> end = system_clock::now();
 
-    return {graph.nodes[t].excess, duration_cast<nanoseconds>(end - start)};
+    std::stringstream ss;
+
+    ss << s + 1 << ";";
+    ss << t + 1 << ";";
+    ss << graph.nodes[t].excess << ";";
+    ss << duration_cast<nanoseconds>(end - start).count() << ";";
+    ss << pushes << ";";
+    ss << relabels << ";";
+    ss << graph.search_iterations;
+
+    return ss.str();
 }
 
 void local::DIMACS_residual_graph::push(vertex &v, uint32_t index) {
@@ -100,7 +113,8 @@ int32_t local::DIMACS_residual_graph::findEdgeToPush(local::vertex &v) {
         if (v.key == nodes[v._out_edges[i]._destination].key + 1 && v._out_edges[i]._capacity_available > 0)
             return i;
         else
-            v.next_potential_arc_to_push = (v.next_potential_arc_to_push + 1) % int32_t(v._out_edges.size());
+            ++v.next_potential_arc_to_push;
+    v.next_potential_arc_to_push = 0;
     return -1;
 }
 
@@ -109,6 +123,7 @@ local::vertex *local::DIMACS_residual_graph::get_highest_vertex(int32_t s, int32
     int32_t max_height = -1;
     int32_t i;
     for (i = highest_node_index + 1; i < nodes_count; ++i) {
+        ++search_iterations;
         vertex &v = nodes[i];
         if (i != s && i != t && v.isActive() && v.key > max_height) {
             ptr = &nodes[i];
@@ -117,4 +132,13 @@ local::vertex *local::DIMACS_residual_graph::get_highest_vertex(int32_t s, int32
     }
     highest_node_index = i % nodes_count;
     return ptr;
+}
+
+std::string local::DIMACS_residual_graph::getQueryMaxFlowReportHeader() {
+    std::stringstream ss;
+
+    ss
+            << "max-flow_s;max-flow_t;max-flow_value;max-flow_elapsed_time(ns);max-flow_pushes;max-flow_relabels;max-flow_search_iterations";
+
+    return ss.str();
 }
