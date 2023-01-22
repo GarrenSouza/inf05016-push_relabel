@@ -19,8 +19,10 @@ int main() {
 
     std::cin >> dummy >> s >> dummy;
     std::cin >> dummy >> t >> dummy;
+
     local::DIMACS_residual_graph g(nodes_count, arcs_count, std::cin);
-    auto a = g.queryMaxFlow(s, t);
-    std::cout << std::get<0>(a);
+
+    std::cout << g.queryMaxFlow(s, t);
+
     return 0;
 }

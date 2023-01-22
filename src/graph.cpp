@@ -3,7 +3,6 @@
 #include <sstream>
 
 #include <graph.hpp>
-#include <cassert>
 
 using namespace std::chrono;
 
@@ -46,15 +45,12 @@ bool local::vertex::isActive() {
     return excess > 0;
 }
 
-std::tuple<uint32_t, std::chrono::nanoseconds>
+uint32_t
 local::DIMACS_residual_graph::queryMaxFlow(int32_t s, int32_t t) {
-    assert(s > 0 && t > 0);
-    // preserve the graph state by working out the max-flow over a copy
+    // it is possible to preserve the graph state by working out the max-flow over a copy
     DIMACS_residual_graph &graph = *this;
     s = index_to_array_pos(s);
     t = index_to_array_pos(t);
-
-    time_point<system_clock> start = system_clock::now();
 
     // initializing the algorithm state
     graph.nodes[s].key = graph.nodes_count;
@@ -75,9 +71,7 @@ local::DIMACS_residual_graph::queryMaxFlow(int32_t s, int32_t t) {
             else
                 graph.relabel(*v);
 
-    time_point<system_clock> end = system_clock::now();
-
-    return {graph.nodes[t].excess, duration_cast<nanoseconds>(end - start)};
+    return graph.nodes[t].excess;
 }
 
 void local::DIMACS_residual_graph::push(vertex &v, uint32_t index) {
