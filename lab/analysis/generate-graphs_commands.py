@@ -34,9 +34,10 @@ for i in v:
 k = 5
 for i in v:
     for j in v:
-        j = j - 1
-        graph_file_name = f"g_{k}_{i}_{j}_{r}.gr"
-        command = f"{bin_folder}/{graph_generator_bin} {k} {i} {j} {r} {graph_files_folder}/{graph_file_name}"
+        if j < i:
+            j = j - 1
+            graph_file_name = f"g_{k}_{i}_{j}_{r}.gr"
+            command = f"{bin_folder}/{graph_generator_bin} {k} {i} {j} {r} {graph_files_folder}/{graph_file_name}"
         commands.append(command)
 
 # for basic line,  exp line, dexp line
@@ -44,7 +45,7 @@ for l in range(6, 9):
     for i in v:
         for j in v:
             for k in w:
-                graph_file_name = f"g_{l}_{i}_{j}_{k}{r}.gr"
+                graph_file_name = f"g_{l}_{i}_{j}_{k}_{r}.gr"
                 command = f"{bin_folder}/{graph_generator_bin} {l} {i} {j} {k} {r} {graph_files_folder}/{graph_file_name}"
                 commands.append(command)
 
@@ -67,3 +68,5 @@ for j in u:
 for c in commands:
     print(f"echo \"about to run '{c}'...\"")
     print(c)
+
+print("find ./graphs -size +200k -delete")
