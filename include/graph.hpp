@@ -6,6 +6,10 @@
 #include <string>
 #include <chrono>
 #include <iostream>
+#include <limits>
+#include <set>
+#include <memory>
+#include <ostream>
 
 #include <heap.hpp>
 
@@ -17,15 +21,16 @@ namespace local {
         edge_to(int32_t dst, int32_t capacity) : _destination(dst), _capacity_available(capacity),
                                                  _residual_counterpart_index(-1) {}
 
-        edge_to(int32_t dst, int32_t capacity, int32_t counterpart_index) : _destination(dst),
-                                                                            _capacity_available(capacity),
-                                                                            _residual_counterpart_index(
-                                                                                    counterpart_index) {}
+        edge_to(int32_t dst, int32_t capacity, int32_t counterpart_index, bool synthetic) :
+                _destination(dst),
+                _capacity_available(capacity),
+                _residual_counterpart_index(counterpart_index),
+                _synthetic(synthetic) {}
 
         uint32_t _destination;
         uint32_t _capacity_available;
         uint32_t _residual_counterpart_index;
-
+        bool _synthetic;
     };
 
     struct vertex : public HeapNode {
@@ -35,29 +40,54 @@ namespace local {
 
         vertex() : excess(0), next_potential_arc_to_push(0) {}
 
-        int32_t addArc(int32_t destination, int32_t capacity, uint32_t residual_counterpart_index = 0);
+        int32_t addArc(int32_t destination, int32_t capacity, uint32_t residual_counterpart_index = 0, bool synthetic = false);
 
-        bool isActive();
+        bool isActive() const;
     };
 
-    class DIMACS_residual_graph {
+    class OpenPitGraph {
     public:
+
+        enum class LumpStatus {
+            ESCAVATED,
+            RESTING
+        };
+
         int32_t arcs_count, nodes_count;
 
-        DIMACS_residual_graph(int32_t nodes, int32_t edges, std::istream &input_stream);
+        OpenPitGraph(int32_t rows, int32_t columns, std::istream &input_stream);
 
-        uint32_t queryMaxFlow(uint32_t s, uint32_t t);
+        std::unique_ptr<std::vector<LumpStatus>> getOptimalMining();
+
+        friend std::ostream &operator<<(std::ostream &os, const OpenPitGraph &dt);
 
     private:
+
+        uint32_t updateToMaxFlow();
+
         static inline uint32_t index_to_array_pos(uint32_t position);
+
+        static inline uint32_t array_pos_to_index(uint32_t array_pos);
+
+        void addArc(int32_t u, int32_t v, int32_t w);
 
         void push(vertex &v, edge_to &e);
 
         void relabel(vertex &v);
 
-        edge_to* findEdgeToPush(vertex &v);
+        edge_to *findEdgeToPush(vertex &v);
+
+        void bfs(uint32_t root, std::vector<LumpStatus> &visited);
+
+        uint32_t get_source_node() const;
+
+        uint32_t get_sink_node() const;
 
         std::vector<vertex> nodes;
+
+        bool min_cut_available;
     };
+
+    std::ostream &operator<<(std::ostream &os, const OpenPitGraph &dt);
 }
 

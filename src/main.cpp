@@ -5,22 +5,21 @@
 #include <graph.hpp>
 
 int main() {
-    std::string line, dummy;
+    int32_t rows, columns;
 
-    while (line.substr(0, 5) != "p max")
-        getline(std::cin, line);
+    std::cin >> columns >> rows;
 
-    std::stringstream line_stream;
-    uint32_t nodes_count, arcs_count, s, t;
+    local::OpenPitGraph g(rows, columns, std::cin);
+//    std::cout << g;
+    auto miningPlan = *g.getOptimalMining();
 
-    line_stream.str(line);
-    line_stream >> dummy >> dummy >> nodes_count >> arcs_count;
-
-    std::cin >> dummy >> s >> dummy;
-    std::cin >> dummy >> t >> dummy;
-
-    local::DIMACS_residual_graph g(nodes_count, arcs_count, std::cin);
-    std::cout << g.queryMaxFlow(s, t);
+    std::cout << rows << ' ' << columns << '\n';
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j) {
+            std::cout << (miningPlan[i * columns + j] == local::OpenPitGraph::LumpStatus::ESCAVATED ? '1' : '0') << " ";
+        }
+        std::cout << '\n';
+    }
 
     return 0;
 }

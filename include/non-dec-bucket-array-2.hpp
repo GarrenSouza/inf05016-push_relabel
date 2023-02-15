@@ -17,6 +17,8 @@ namespace local {
 
         uint32_t get_size();
 
+        int32_t get_capacity();
+
         bool is_empty();
 
         void push(T *new_element);
@@ -28,6 +30,11 @@ namespace local {
 
         int32_t _size, _biggest_index;
     };
+
+    template<typename T>
+    int32_t nd_bucket_array<T>::get_capacity() {
+        return buckets.size();
+    }
 
     template<typename T>
     bool nd_bucket_array<T>::is_empty() {
