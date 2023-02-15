@@ -10,7 +10,10 @@ int main() {
     std::cin >> columns >> rows;
 
     local::OpenPitGraph g(rows, columns, std::cin);
-//    std::cout << g;
+
+    // prints the graph in DIMACS form as an s-t, max-flow instance (testing is due)
+    // std::cout << g;
+
     auto miningPlan = *g.getOptimalMining();
 
     std::cout << rows << ' ' << columns << '\n';
