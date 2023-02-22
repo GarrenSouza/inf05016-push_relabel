@@ -24,5 +24,7 @@ int main() {
         std::cout << '\n';
     }
 
+    std::cerr << g.getNetProfit(miningPlan) << '\n';
+
     return 0;
 }

@@ -11,6 +11,7 @@ using namespace std::chrono;
 local::OpenPitGraph::OpenPitGraph(int32_t rows, int32_t columns, std::istream &input_stream) :
         arcs_count((rows - 1) * (3 * (columns - 2) + 2 * 2) + rows * columns),
         nodes_count(rows * columns + 2),
+        grid(rows),
         min_cut_available(false) {
 
     std::string line;
@@ -24,6 +25,9 @@ local::OpenPitGraph::OpenPitGraph(int32_t rows, int32_t columns, std::istream &i
 
     i = 0;
     while (i < rows) {
+
+        grid[i].resize(columns);
+
         std::getline(input_stream, line);
 
         j = 0;
@@ -48,6 +52,7 @@ local::OpenPitGraph::OpenPitGraph(int32_t rows, int32_t columns, std::istream &i
             else
                 addArc(u, t, -1 * w);
 
+            grid[i][j] = w;
             ++j;
         }
         ++i;
@@ -191,4 +196,15 @@ std::ostream &local::operator<<(std::ostream &os, const local::OpenPitGraph &dt)
 
 uint32_t local::OpenPitGraph::array_pos_to_index(uint32_t array_pos) {
     return array_pos + 1;
+}
+
+int32_t local::OpenPitGraph::getNetProfit(std::vector<LumpStatus> &exploration_map) {
+    int32_t acum = 0, index = 0;
+    for (auto &i: grid)
+        for (int j: i) {
+            if (exploration_map[index] == LumpStatus::ESCAVATED)
+                acum += j;
+            ++index;
+        }
+    return acum;
 }

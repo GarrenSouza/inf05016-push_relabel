@@ -59,6 +59,8 @@ namespace local {
 
         std::unique_ptr<std::vector<LumpStatus>> getOptimalMining();
 
+        int32_t getNetProfit(std::vector<LumpStatus>& exploration_map);
+
         friend std::ostream &operator<<(std::ostream &os, const OpenPitGraph &dt);
 
     private:
@@ -84,7 +86,7 @@ namespace local {
         uint32_t get_sink_node() const;
 
         std::vector<vertex> nodes;
-
+        std::vector<std::vector<int>> grid;
         bool min_cut_available;
     };
 
