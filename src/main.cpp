@@ -16,7 +16,7 @@ int main() {
 
     auto miningPlan = *g.getOptimalMining();
 
-    std::cout << rows << ' ' << columns << '\n';
+    std::cout << columns << ' ' << rows << '\n';
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < columns; ++j) {
             std::cout << (miningPlan[i * columns + j] == local::OpenPitGraph::LumpStatus::ESCAVATED ? '1' : '0') << " ";
